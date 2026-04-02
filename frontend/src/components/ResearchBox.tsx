@@ -63,13 +63,29 @@ const ResearchBox: React.FC = () => {
    return (
 
 
-      <div className="flex flex-col gap-2 h-screen w-full bg-gray-900 text-white p-4 overflow-hidden">
+      <div className="flex flex-col gap-2 h-screen w-full bg-gray-900 text-white p-4 overflow-hidden postion-relative">
 
-         <h2 className="text-xl font-bold text-center mb-4">
+         <h2 className="text-xl font-bold text-center">
             Gas Town Multi-Agent Orchestration System
          </h2>
 
-         <div className="flex gap-3 m-b-4">
+
+         {loading && (
+            <p className="text-gray-400 animate-pulse">
+               Researching...
+            </p>
+         )}
+
+         {result && (
+            <div className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-y-auto custom-scrollbar max-h-[85vh]">
+               <pre className="whitespace-pre-wrap wrap-break-words text-sm leading-relaxed">
+                  {result}
+               </pre>
+               <div ref={bottomRef} />
+            </div>
+         )}
+
+         <div className="flex gap-3 m-b-4 absolute bottom-0 left-0 w-full mb-2 px-4">
 
             <input
                className="flex-1 bg-gray-800 border border-gray-600 text-white placeholder-gray-400 px-4 py-2 rounded-lg focus:outline-none hover:border-blue-500
@@ -89,21 +105,6 @@ const ResearchBox: React.FC = () => {
             </button>
 
          </div>
-
-         {loading && (
-            <p className="text-gray-400 animate-pulse">
-               Researching...
-            </p>
-         )}
-
-         {result && (
-            <div className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-y-auto custom-scrollbar">
-               <pre className="whitespace-pre-wrap wrap-break-words text-sm leading-relaxed">
-                  {result}
-               </pre>
-               <div ref={bottomRef} />
-            </div>
-         )}
 
       </div>
    );

@@ -26,6 +26,7 @@ def execute_convoy(task_id, convoy):
                 query = bead["input"]
 
                 r.publish(channel, f"Running multiple research:\n\n")
+                
 
                 prompts = [
                     f"Research from news sources: {query}",
@@ -117,6 +118,11 @@ Structure:
 - Key Points
 - Analysis
 - Conclusion
+
+Include:
+- citations in [1] format
+- sources at end
+
 """):
                     try:
                         data = json.loads(chunk)
