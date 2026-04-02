@@ -38,6 +38,11 @@ const ResearchBox: React.FC = () => {
             setResult((prev) => prev + event.data);
          };
 
+         socket.onmessage = (event) => {
+            if (event.data === "__ping__") return;
+            console.log(event.data);
+         };
+
          socket.onerror = (err) => {
             console.error("WebSocket error:", err);
             setResult(" Error in streaming");

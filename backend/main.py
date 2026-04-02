@@ -8,6 +8,7 @@ app = FastAPI()
 
 import redis
 import asyncio
+import time
 r = redis.Redis(host="localhost", port=6379, db=0)
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,13 +43,15 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
             if data == "[DONE]":
                 break
 
+        if time.time() - last_sent > 10:
+            await websocket.send_text("__ping__")
+            last_sent = time.time()
+    
+
         await asyncio.sleep(0.1)
 
 
 import uuid
-
-
-
 from backend.mayor.mayor import create_convoy
 
 @app.post("/research")
