@@ -6,7 +6,13 @@ import json
 from backend.agents.research_agent import research_agent
 from backend.agents.summarizer_agent import summarizer_agent
 from backend.agents.critic_agent import critic_agent
-from backend.agents.writer_agent import writer_agent    
+from backend.agents.writer_agent import writer_agent  
+
+from backend.agents.backendapi_agent import backend_agent
+from backend.agents.code_agent import code_agent
+from backend.agents.explainer_agent import explainer_agent
+from backend.agents.compare_agent import compare_agent
+from backend.agents.creative_agent import creative_agent
 
 
 r = redis.Redis(host="localhost", port=6379, db=0)
@@ -30,13 +36,17 @@ def execute_convoy(task_id, convoy):
                 query = bead["input"]
 
                 r.publish(channel, f"Running multiple research:\n\n")
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                }))
                 
 
                 prompts = [
                     f"Technical analysis of: {query}",
-                    f"Economic and industry impact of: {query}",
-                    f"Latest news and developments: {query}",
-                    f"Academic research insights on: {query}"
+                    # f"Economic and industry impact of: {query}",
+                    # f"Latest news and developments: {query}",
+                    # f"Academic research insights on: {query}"
                     ]
 
 
@@ -44,6 +54,7 @@ def execute_convoy(task_id, convoy):
 
                 for p in prompts:
                     r.publish(channel, f"\n\nRuinning >> {p}\n")
+                  
                     full_text = ""
 
                     for chunk in research_agent(p):
@@ -53,6 +64,11 @@ def execute_convoy(task_id, convoy):
 
                             if text:
                                 r.publish(channel, text)
+                                r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                     "content":text[:100],
+                          }))
                                 full_text += text
 
                         except Exception as e:
@@ -65,6 +81,10 @@ def execute_convoy(task_id, convoy):
                 data_store["research"] = combined_results    
 
             elif step == "summarize":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
                 full_text = ""
 
                 for chunk in summarizer_agent(f"Summarize this:\n{data_store.get('research', '')}"):
@@ -74,6 +94,11 @@ def execute_convoy(task_id, convoy):
 
                         if text:
                             r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                     "content":text[:100],
+                          }))
                             full_text += text
 
                     except Exception as e:
@@ -83,6 +108,10 @@ def execute_convoy(task_id, convoy):
                 data_store["summary"] = full_text
 
             elif step == "critic":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
                 full_text = ""
 
                 for chunk in critic_agent(f"Critically improve this:\n{data_store.get('summary', '')}"):
@@ -92,6 +121,11 @@ def execute_convoy(task_id, convoy):
 
                         if text:
                             r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                      "content":text[:100],
+                          }))
                             full_text += text
 
                     except Exception as e:
@@ -101,6 +135,10 @@ def execute_convoy(task_id, convoy):
                 data_store["critic"] = full_text
 
             elif step == "write":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
                 input_text = data_store.get("critic") or data_store.get("summary") or data_store.get("research", "")
 
                 full_text = ""
@@ -130,6 +168,11 @@ Include:
 
                         if text:
                             r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                      "content":text[:100],
+                          }))
                             full_text += text
 
                     except Exception as e:
@@ -137,11 +180,162 @@ Include:
                         continue
 
                 data_store["final"] = full_text
+            
+            elif step == "backend":
+                input_text = bead.get("input", "")
+                full_text = ""
 
-    
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
+
+                for chunk in backend_agent(input_text):
+                    try:
+                        data = json.loads(chunk)
+                        text = data.get("response", "")
+
+                        if text:
+                            r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                      "content":text[:100],
+                          }))
+                            full_text += text
+
+                    except Exception as e:
+                        print("Parse error:", e)
+                        continue
+
+                data_store["backend"] = full_text
+            
+            elif step == "code":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
+                input_text = bead.get("input", "")
+                full_text = ""
+
+                for chunk in code_agent(input_text):
+                    try:
+                        data = json.loads(chunk)
+                        text = data.get("response", "")
+
+                        if text:
+                            r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                     "content":text[:100],
+                          }))
+                            full_text += text
+
+                    except Exception as e:
+                        print("Parse error:", e)
+                        continue
+
+                data_store["code"] = full_text
+     
+            elif step == "explain":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
+                input_text = bead.get("input", "")
+
+                full_text = ""
+
+                for chunk in explainer_agent(input_text):
+                    try:
+                        data = json.loads(chunk)
+                        text = data.get("response", "")
+
+                        if text:
+                            r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                      "content":text[100],
+                          }))
+                            full_text += text
+
+                    except Exception as e:
+                        print("Parse error:", e)
+                        continue
+
+                data_store["explain"] = full_text           
+     
+            elif step == "compare":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
+                input_text = bead.get("input", "")
+
+                full_text = ""
+
+                for chunk in compare_agent(input_text):
+                    try:
+                        data = json.loads(chunk)
+                        text = data.get("response", "")
+
+                        if text:
+                            r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                      "content":text[100],
+                          }))
+                            full_text += text
+
+                    except Exception as e:
+                        print("Parse error:", e)
+                        continue
+
+                data_store["compare"] = full_text     
+        
+            elif step == "creative":
+                r.publish(channel, json.dumps({
+                        "type": "step",
+                        "step": step
+                    }))
+                input_text = bead.get("input", "")
+
+                full_text = ""
+
+                for chunk in creative_agent(input_text):
+                    try:
+                        data = json.loads(chunk)
+                        text = data.get("response", "")
+
+                        if text:
+                            r.publish(channel, text)
+                            r.publish(channel, json.dumps({
+                                     "type": "log",
+                                     "step": step,
+                                      "content":text[100],
+                          }))
+                            full_text += text
+
+                    except Exception as e:
+                        print("Parse error:", e)
+                        continue
+
+                data_store["creative"] = full_text        
+        
+        
+        
         #DONE
+
+        r.publish(channel, json.dumps({
+             "type": "done",
+             "step": step
+             }))
     
         r.publish(channel, "\n\n COMPLETED\n")
+
         r.publish(channel, "[DONE]")
 
         return data_store.get("final", "")

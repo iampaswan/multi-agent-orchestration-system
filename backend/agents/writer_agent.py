@@ -43,28 +43,6 @@ INSTRUCTIONS:
 ## Conclusion
 - Clear and strong takeaway
 
-3. WRITING STYLE
-- Professional and analytical tone
-- Clear, concise, and well-flowing paragraphs
-- Avoid repetition
-- Avoid generic filler phrases
-
-4. CITATIONS
-- Use inline citations like [1], [2] where relevant
-- Base citations ONLY on provided data
-- Do NOT invent new sources
-
-5. QUALITY RULES
-- Improve clarity and readability
-- Ensure logical flow between sections
-- Make the output feel like a human-written report
-
-6. IMPORTANT
-- Do NOT hallucinate facts
-- Do NOT introduce new unsupported claims
-- Stay faithful to input data
-
-Generate a high-quality report now.
 """)
 
 
