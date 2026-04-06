@@ -200,7 +200,7 @@ Include:
                             r.publish(channel, json.dumps({
                                      "type": "log",
                                      "step": step,
-                                      "content":text[:100],
+                                     "content":text[:100],
                           }))
                             full_text += text
 
