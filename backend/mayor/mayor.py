@@ -2,124 +2,88 @@ import json
 from backend.utils.llm import call_llm
 
 
-def detect_intents(query: str):
+
+
+
+
+
+def create_plan(query: str):
     prompt = f"""
-You are an NLP system.
+You are an AI task planner.
 
-Analyze the user query and extract ALL intents.
+Break the user query into ordered steps.
+For EACH step assign the correct agent.
 
-Possible intents:
-- backend : use this intend when user asked for creation of backend API.
-- generate_code : use this intend when user asked to generate code. 
-- explain : use this intend when user asked to explain anything.
-- research : use this intend when user asked for research on any topic.
-- summarize : use this intend when user asked for summarize anything.
-- compare : use this intend when user asked for comparison btween or more things.
-- creative : use this intend when user asked for create content on any topic. 
+Available agents:
+- research → for gathering knowledge
+- backend → for building APIs
+- generate_code → for writing code
+- explain → for explaining things
+- summarize → for summarizing
+- compare → for comparisons
+- creative → for writing content
+- write → for final structured output
 
-Return JSON like:
+Return STRICT JSON:
+
 [
-  {{ "intent": "backend", "reason": "user asked to build API" }},
-  {{ "intent": "explain", "reason": "user asked for explanation" }}
+  {{
+    "step": 1,
+    "agent": "research",
+    "input": "research FastAPI"
+  }},
+  {{
+    "step": 2,
+    "agent": "backend",
+    "input": "build todo API using FastAPI"
+  }},
+  {{
+    "step": 3,
+    "agent": "explain",
+    "input": "explain the backend code"
+  }},
+  {{
+    "step": 4,
+    "agent": "write",
+    "input": "combine everything into final answer"
+  }}
 ]
 
 Query:
 {query}
+
+
+Rules:
+- Use research BEFORE coding if topic is unknown
+- Use backend for API building
+- Use generate_code for code writing
+- Use explain AFTER code generation
+- Always end with write
+- Keep steps minimal but complete
+
+
 """
+    response = call_llm(prompt)
 
-    try:
-        response = call_llm(prompt)
+    start = response.find("[")
+    end = response.rfind("]") + 1
+    return json.loads(response[start:end])
 
-        start = response.find("[")
-        end = response.rfind("]") + 1
-        json_str = response[start:end]
-
-        return json.loads(json_str)
-
-    except Exception as e:
-        print("Intent detection error:", e)
-        return []
-    
-
-def split_tasks(query: str):
-    prompt = f"""
-Break the query into atomic tasks.
-
-Each task should be a clear step.
-
-Return JSON like:
-[
-  {{ "task": "create CRUD API using FastAPI" }},
-  {{ "task": "explain the code" }}
-]
-
-Query:
-{query}
-"""
-
-    try:
-        response = call_llm(prompt)
-
-        start = response.find("[")
-        end = response.rfind("]") + 1
-        json_str = response[start:end]
-
-        return json.loads(json_str)
-
-    except Exception as e:
-        print("Task split error:", e)
-        return [{"task": query}]
-    
 
 
 def create_convoy(query: str):
-    print(" Query:", query)
+    print("Query:", query)
 
-    intents = detect_intents(query)
-    tasks = split_tasks(query)
-
-    print(" Intents:", intents)
-    print(" Tasks:", tasks)
+    plan = create_plan(query)
 
     convoy = []
+    print("Creating Convoy..")
 
-    intent_to_agent = {
-        "backend": "backend",
-        "generate_code": "generate_code",
-        "explain": "explain",
-        "research": "research",
-        "summarize": "summarize",
-        "compare": "compare",
-        "creative": "creative"
-    }
+    for step in plan:
+        convoy.append({
+            "type": step["agent"],
+            "input": step.get("input", "")
+        })
 
-    for i, task in enumerate(tasks):
-        task_text = task["task"]
-
-        matched_intent = None
-
-        for intent_obj in intents:
-            intent = intent_obj.get("intent")
-
-            if intent in task_text.lower():
-                matched_intent = intent
-                break
-
-        if not matched_intent and intents:
-            matched_intent = intents[0]["intent"]
-
-        agent_type = intent_to_agent.get(matched_intent, "research")
-
-        step = {"type": agent_type}
-
-        if i == 0:
-            step["input"] = task_text
-
-        convoy.append(step)
-
-    if convoy[-1]["type"] not in ["write", "explain"]:
-        convoy.append({"type": "write"})
-
-    print(" Final Convoy:", convoy)
-
+    print("Final Convoy:", convoy)
     return convoy

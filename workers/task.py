@@ -86,6 +86,7 @@ def execute_convoy(task_id, convoy):
                         "type": "step",
                         "step": step
                     }))
+                input_text = bead.get("input", "")
                 full_text = ""
 
                 for chunk in summarizer_agent(f"Summarize this:\n{data_store.get('research', '')}"):
@@ -114,6 +115,7 @@ def execute_convoy(task_id, convoy):
                         "step": step
                     }))
                 full_text = ""
+                input_text = bead.get("input", "")
 
                 for chunk in critic_agent(f"Critically improve this:\n{data_store.get('summary', '')}"):
                     try:
@@ -143,6 +145,7 @@ def execute_convoy(task_id, convoy):
                 input_text = data_store.get("critic") or data_store.get("summary") or data_store.get("research", "")
 
                 full_text = ""
+                input_text = bead.get("input", "")
                 
 
 
@@ -201,7 +204,7 @@ Include:
                             r.publish(channel, json.dumps({
                                      "type": "log",
                                      "step": step,
-                                     "content":text[:100],
+                                     "content":text,
                           }))
                             full_text += text
 
@@ -211,13 +214,13 @@ Include:
 
                 data_store["backend"] = full_text
             
-            elif step == "code":
+            elif step == "generate_code":
+                input_text = bead.get("input", "")
+                full_text = ""
                 r.publish(channel, json.dumps({
                         "type": "step",
                         "step": step
                     }))
-                input_text = bead.get("input", "")
-                full_text = ""
 
                 for chunk in generate_code_agent(input_text):
                     try:
@@ -244,8 +247,8 @@ Include:
                         "type": "step",
                         "step": step
                     }))
+                
                 input_text = bead.get("input", "")
-
                 full_text = ""
 
                 for chunk in explainer_agent(input_text):

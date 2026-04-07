@@ -1,1 +1,4 @@
 celery -A workers.celery_app worker --loglevel=info
+
+
+python -m uvicorn backend.main:app --reload
