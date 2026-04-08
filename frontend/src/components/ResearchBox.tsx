@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { researchApi } from "../config/congfiguration";
 
+import Markdown from "react-markdown";
+
 const ResearchBox: React.FC = () => {
    const [query, setQuery] = useState<string>("");
    const [result, setResult] = useState<string>("");
@@ -111,7 +113,8 @@ const ResearchBox: React.FC = () => {
             {result && (
                <div className="flex-1 bg-gray-800 border border-gray-700 rounded-lg p-4 overflow-y-auto max-h-[87vh] custom-scrollbar">
                   <pre className="whitespace-pre-wrap wrap-break-words text-sm leading-relaxed">
-                     {result}
+
+                     <Markdown>{result}</Markdown>
                      <div ref={bottomRef} />
                   </pre>
                </div>
