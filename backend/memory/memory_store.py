@@ -1,28 +1,30 @@
-# import chromadb
-# from sentence_transformers import SentenceTransformer
+import chromadb
 
-# client = chromadb.Client()
-# collection = client.get_or_create_collection(name="chat_memory")
+from chromadb.utils import embedding_functions
 
-# model = SentenceTransformer("all-MiniLM-L6-v2")
+chroma_client = chromadb.Client(
+    chromadb.config.Settings(
+        persist_directory="./chroma_db"
+    )
+)
+collection = chroma_client.get_or_create_collection(
+    name="agent_memory"
+)
+
+def store_memory(task_id, step, content):
+    collection.add(
+        documents=[content],
+        metadatas=[{"task_id": task_id, "step": step}],
+        ids=[f"{task_id}-{step}-{hash(content)}"]
+    )
 
 
-# def store_memory(text: str):
-#     embedding = model.encode(text).tolist()
 
-#     collection.add(
-#         documents=[text],
-#         embeddings=[embedding],
-#         ids=[str(hash(text))]
-#     )
+def get_memory(query, task_id):
+    results = collection.query(
+        query_texts=[query],
+        n_results=3
+    )
 
-
-# def search_memory(query: str, k=3):
-#     embedding = model.encode(query).tolist()
-
-#     results = collection.query(
-#         query_embeddings=[embedding],
-#         n_results=k
-#     )
-
-#     return results["documents"][0] if results["documents"] else []
+    docs = results.get("documents", [[]])[0]
+    return "\n".join(docs)

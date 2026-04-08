@@ -7,7 +7,7 @@ const ResearchBox: React.FC = () => {
 
 
    const [taskId, setTaskId] = useState<string>("");
-   const [plan, setPlan] = useState<any[]>([]);
+   const [plan, setPlan] = useState<{ type: string }[]>([]);
    const [currentStep, setCurrentStep] = useState<string>("");
 
    const [logs, setLogs] = useState<Record<string, string>>({});
@@ -68,6 +68,7 @@ const ResearchBox: React.FC = () => {
                }
                if (parsed.type === "log") {
                   console.log(`Log for ${parsed.step}:`, parsed.content);
+                  setCurrentStep(parsed.step);
                   setLogs((prev) => ({
                      ...prev,
                      [parsed.step]: (prev[parsed.step] || "") + parsed.content,
@@ -134,11 +135,11 @@ const ResearchBox: React.FC = () => {
             </div>
          </div>
 
-         <div className="w-1/5 bg-gray-950 text-white p-4 border-l border-gray-700">
+         <div className="w-1/5 bg-gray-950 text-white p-4 border-l border-gray-700 relative ">
 
             <h3 className="text-lg font-bold mb-4">Mayor Plan & Actions</h3>
 
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-y-auto custom-scrollbar max-h-[75vh]">
                <div>{taskId}</div>
                {plan.map((p, i) => {
                   const isActive = currentStep === p.type;
@@ -152,10 +153,7 @@ const ResearchBox: React.FC = () => {
                            className={`flex justify-between items-center ${isActive ? "text-green-400 font-bold" : ""
                               }`}
                         >
-                           {/* <span>
-                              {isDone ? "✔" : isActive ? "⚙️" : "⬜"}{" "}
-                              {p.type.toUpperCase()}
-                           </span> */}
+
                            <span className="flex items-center gap-2">
                               {isDone ? (
                                  "✔"
@@ -172,7 +170,7 @@ const ResearchBox: React.FC = () => {
                         {/* LOGS */}
 
                         {logs[p.type] && (
-                           <div className="mt-2 bg-gray-700 p-2 rounded-lg max-h-40 overflow-y-auto custom-scrollbar overflow-x-hidden">
+                           <div className="mt-2 bg-gray-700 p-2 rounded-lg max-h-20 overflow-y-auto custom-scrollbar overflow-x-hidden">
                               <pre className="whitespace-pre-wrap wrap-break-words mt-2 text-xs text-gray-300">
                                  {logs[p.type]}
                                  <div ref={logsBottomRef} />
@@ -186,8 +184,8 @@ const ResearchBox: React.FC = () => {
             </div>
 
             {currentStep && (
-               <div className="mt-6">
-                  <h4 className="text-md font-semibold mb-2">⚙️ Running</h4>
+               <div className="mt-6 border-t-2 ">
+                  <h4 className="text-md font-semibold mt-2">Current Running Agent</h4>
                   <div className="bg-blue-600 p-2 rounded-lg text-center">
                      {currentStep.toUpperCase()}
                   </div>
@@ -195,7 +193,7 @@ const ResearchBox: React.FC = () => {
             )}
 
             {plan.length > 0 && (
-               <div className="mt-6">
+               <div className="mt-2 ">
                   <h4 className="text-sm mb-2">Progress</h4>
 
                   {(() => {

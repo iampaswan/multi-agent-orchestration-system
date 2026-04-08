@@ -18,11 +18,12 @@ from backend.agents.creative_agent import creative_agent
 
 r = redis.Redis(host="localhost", port=6379, db=0)
 
+from backend.memory.memory_store import store_memory,get_memory
 
 @celery.task
 def execute_convoy(task_id, convoy):
-    channel = f"stream:{task_id}"
 
+    channel = f"stream:{task_id}"
     print("Convoy received:", convoy)
 
     data_store = {}
@@ -31,17 +32,20 @@ def execute_convoy(task_id, convoy):
         for bead in convoy:
             
             step = bead["type"]
+            input_text = bead.get("input", " ")
+          
+
 
             r.publish(channel, f"\n\n----- Running -> {step.upper()} -----\n")
 
             if step == "research":
-                query = bead["input"]
 
                 r.publish(channel, f"Running multiple research:\n\n")
                 r.publish(channel, json.dumps({
                         "type": "step",
                         "step": step
                 }))
+                query = bead.get("input", "")
                 
 
                 prompts = [
@@ -80,7 +84,11 @@ def execute_convoy(task_id, convoy):
                     allresults.append(full_text)
 
                 combined_results = "\n\n".join(allresults)
-                data_store["research"] = combined_results    
+                data_store["research"] = combined_results  
+                r.publish(channel, json.dumps({
+                     "type": "done",
+                      "step": step
+                    }))  
 
             elif step == "summarize":
                 r.publish(channel, json.dumps({
@@ -109,6 +117,10 @@ def execute_convoy(task_id, convoy):
                         continue
 
                 data_store["summary"] = full_text
+                r.publish(channel, json.dumps({
+                 "type": "done",
+                 "step": step
+                }))
 
             elif step == "critic":
                 r.publish(channel, json.dumps({
@@ -137,6 +149,10 @@ def execute_convoy(task_id, convoy):
                         continue
 
                 data_store["critic"] = full_text
+                r.publish(channel, json.dumps({
+    "type": "done",
+    "step": step
+}))
 
             elif step == "write":
                 r.publish(channel, json.dumps({
@@ -146,7 +162,6 @@ def execute_convoy(task_id, convoy):
                 input_text = data_store.get("critic") or data_store.get("summary") or data_store.get("research", "")
 
                 full_text = ""
-                input_text = bead.get("input", "")
                 
 
 
@@ -185,6 +200,10 @@ Include:
                         continue
 
                 data_store["final"] = full_text
+                r.publish(channel, json.dumps({
+    "type": "done",
+    "step": step
+}))
             
             elif step == "backend_fastapi":
                 input_text = bead.get("input", "")
@@ -247,7 +266,7 @@ Include:
                          print("Parse error:", e)
                          continue 
                     
-                data_store["backend_nodeapi"] = full_text    
+                data_store["backend_nodeapi"] = full_text   
                 r.publish(channel, json.dumps({
                     "type":"done",
                     "step":step
@@ -280,6 +299,10 @@ Include:
                         continue
 
                 data_store["generate_code"] = full_text
+                r.publish(channel, json.dumps({
+    "type": "done",
+    "step": step
+}))
      
             elif step == "explain":
                 r.publish(channel, json.dumps({
@@ -308,7 +331,11 @@ Include:
                         print("Parse error:", e)
                         continue
 
-                data_store["explain"] = full_text       
+                data_store["explain"] = full_text   
+                r.publish(channel, json.dumps({
+    "type": "done",
+    "step": step
+}))
      
             elif step == "compare":
                 r.publish(channel, json.dumps({
@@ -337,7 +364,11 @@ Include:
                         print("Parse error:", e)
                         continue
 
-                data_store["compare"] = full_text     
+                data_store["compare"] = full_text 
+                r.publish(channel, json.dumps({
+    "type": "done",
+    "step": step
+}))  
         
             elif step == "creative":
                 r.publish(channel, json.dumps({
@@ -366,7 +397,11 @@ Include:
                         print("Parse error:", e)
                         continue
 
-                data_store["creative"] = full_text        
+                data_store["creative"] = full_text  
+                r.publish(channel, json.dumps({
+    "type": "done",
+    "step": step
+})) 
         
         
         
