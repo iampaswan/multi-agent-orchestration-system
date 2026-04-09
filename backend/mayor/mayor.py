@@ -59,7 +59,7 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW STRICTLY):
 
 8. ONLY if none of the above match:
    - You may create multi-step plan
-   - End with "write"
+
 
 STRICT RULE:
 - DO NOT add extra steps
@@ -93,8 +93,6 @@ Return STRICT JSON like this:
 Query:
 {query}
 
-
-i
 """
     response = call_llm(prompt)
 
