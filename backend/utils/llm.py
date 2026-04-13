@@ -1,7 +1,6 @@
 
 import requests
 
-import json
 
 def call_llm(prompt: str) -> str:
     response = requests.post(
