@@ -49,6 +49,9 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
 
 import uuid
 from backend.mayor.mayor import create_convoy
+from backend.mayor.mayor import execute_convoy
+
+
 
 @app.post("/research")
 def research(query: str):
@@ -56,7 +59,7 @@ def research(query: str):
     convoy = create_convoy(query)  
     task_id = str(uuid.uuid4())
 
-    execute_convoy.delay(task_id, convoy)   
+    execute_convoy(task_id, convoy)   
 
     return {
         "task_id": task_id,
