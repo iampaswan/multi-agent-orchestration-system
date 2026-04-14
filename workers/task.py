@@ -19,6 +19,10 @@ from backend.agents.creative_agent import creative_agent
 r = redis.Redis(host="localhost", port=6379, db=0)
 
 
+
+
+
+
 @celery.task
 def execute_convoy(task_id, convoy):
 
@@ -33,8 +37,6 @@ def execute_convoy(task_id, convoy):
             step = bead["type"]
             input_text = bead.get("input", " ")
           
-
-
             r.publish(channel, f"\n\n----- Running -> {step.upper()} -----\n")
 
             if step == "research":
