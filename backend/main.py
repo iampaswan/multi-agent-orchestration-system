@@ -1,5 +1,5 @@
 # from backend.mayor.mayor import create_convoy
-from workers.task import execute_convoy
+# from workers.task import execute_convoy
 
 
 from fastapi import FastAPI, WebSocket
