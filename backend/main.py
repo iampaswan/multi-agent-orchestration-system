@@ -1,5 +1,5 @@
-# from backend.mayor.mayor import create_convoy
-# from workers.task import execute_convoy
+from backend.mayor.mayor import create_convoy
+from workers.task import execute_convoy
 
 
 from fastapi import FastAPI, WebSocket
@@ -49,9 +49,6 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
 
 import uuid
 from backend.mayor.mayor import create_convoy
-from backend.mayor.mayor import execute_convoy
-
-
 
 @app.post("/research")
 def research(query: str):
